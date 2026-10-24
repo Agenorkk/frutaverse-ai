@@ -80,24 +80,48 @@
     });
   }
   function createEpisode(seriesId) {
-    const s=data.series.find(x=>x.id===seriesId); if(!s)return;
-    const eps=data.episodes.filter(e=>e.seriesId===seriesId).sort((a,b)=>a.number-b.number);
-    const chars=data.characters.filter(c=>c.seriesId===seriesId);
-    const next=eps.length+1;
-    const previous=eps.map(e=>`EPISÓDIO ${e.number}: ${e.title}\n${e.summary}\nDesfecho: ${e.cliffhanger||'não definido'}`).join('\n\n');
-    modal('Preparar episódio '+next,`<div class="ai-status"><span class="status-orb">✦</span><div><b>Roteiro aguardando criação</b><p>Este ambiente ainda não está conectado a um modelo de IA. Você pode montar um rascunho de demonstração para testar o fluxo, ou configurar a API numa próxima etapa.</p></div></div>
+    const series=data.series.find(x=>x.id===seriesId); if(!series)return;
+    const episodes=data.episodes.filter(x=>x.seriesId===seriesId).sort((a,b)=>a.number-b.number);
+    const characters=data.characters.filter(x=>x.seriesId===seriesId);
+    const number=episodes.length+1;
+    const continuity=episodes.map(x=>`EPISÓDIO ${x.number}: ${x.title}\n${x.summary}\nGancho: ${x.cliffhanger||'não definido'}`).join('\n\n');
+    modal('Gerar roteiro com IA — episódio '+number,`
+      <div class="ai-status"><span class="status-orb">✦</span><div><b>Roteiro por inteligência artificial</b><p>A IA vai criar cenas e diálogos considerando os personagens e os episódios anteriores. Você poderá revisar antes de aprovar.</p></div></div>
       <form id="episode-form" class="form-grid">
-        <label class="full">Título provisório<input name="title" value="Episódio ${next}: O segredo começa" required></label>
-        <label class="full">O que deve acontecer neste episódio?<textarea name="direction" rows="3" placeholder="Ex.: A Maçã encontra uma pista escondida no poço...">${next===1?esc(s.premise):''}</textarea></label>
-        <label class="full">Personagens neste episódio<select name="cast" multiple size="3">${chars.map(c=>`<option value="${c.id}" selected>${esc(c.emoji)} ${esc(c.name)}</option>`).join('')}</select><small class="field-help">Use Ctrl ou Command para selecionar vários personagens no computador.</small></label>
-        <label class="full">Resumo anterior (continuidade)<textarea rows="3" readonly>${previous||'Este é o primeiro episódio da série.'}</textarea></label>
-        <div class="full modal-note warning-note">O botão abaixo cria somente um rascunho demonstrativo local. Não é uma chamada real de IA e não gera vídeo nem cobra créditos.</div>
-        <div class="full form-actions"><button type="button" class="btn btn-ghost" data-close>Cancelar</button><button class="btn btn-primary">Criar rascunho de demonstração</button></div>
+        <label class="full">Título provisório<input name="title" value="Episódio ${number}: Um novo segredo" required maxlength="100"></label>
+        <label class="full">O que deve acontecer?<textarea name="direction" rows="3" placeholder="Ex.: A Maçã descobre uma carta escondida no castelo...">${number===1?esc(series.premise):''}</textarea></label>
+        <label class="full">Personagens<select name="cast" multiple size="4">${characters.map(c=>`<option value="${c.id}" selected>${esc(c.emoji)} ${esc(c.name)}</option>`).join('')}</select><small class="field-help">No celular, toque nos personagens que deseja incluir.</small></label>
+        <div class="full modal-note">A geração real exige que o site esteja publicado na Vercel com a chave de IA configurada. A chave fica no servidor, não no navegador.</div>
+        <div class="full form-actions"><button type="button" class="btn btn-ghost" data-close>Cancelar</button><button class="btn btn-primary" id="generate-script-btn">✦ Gerar roteiro com IA</button></div>
       </form>`,root=>{
-      root.querySelector('#episode-form').onsubmit=e=>{
-        e.preventDefault();const f=new FormData(e.currentTarget);const title=f.get('title').trim();const direction=f.get('direction').trim();const selected=[...root.querySelector('[name="cast"]').selectedOptions].map(o=>o.value);const cast=chars.filter(c=>selected.includes(c.id));
-        const ep={id:crypto.randomUUID(),seriesId,number:next,title,summary:direction||'A trama começa a se desenrolar e os personagens se deparam com uma situação inesperada.',direction,castIds:cast.map(c=>c.id),status:'draft',demo:true,scenes:[{title:'Cena 1 — O começo',description:`Estabelecer o cenário de ${s.name} com visual 3D cinematográfico, luz volumétrica, cores ricas e enquadramento vertical 9:16.`,dialogue:cast[0]?`${cast[0].name}: “Tem alguma coisa errada por aqui...”`:'Narrador: “Tudo estava prestes a mudar.”'},{title:'Cena 2 — A descoberta',description:direction||'O protagonista encontra uma pista inesperada que muda o rumo da história.',dialogue:cast[1]?`${cast[1].name}: “Você não devia ter vindo até aqui.”`:'Personagem: “Precisamos descobrir a verdade.”'},{title:'Cena 3 — Gancho final',description:'Close cinematográfico na reação do protagonista; a revelação é interrompida por um acontecimento misterioso.',dialogue:'Narrador: “Mas o que descobriram era apenas o começo...”'}],cliffhanger:'Uma descoberta levanta uma nova pergunta para o próximo episódio.',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
-        data.episodes.push(ep);closeModal();save();openEpisode(ep.id);toast('Rascunho criado. Revise antes de aprovar.');
+      const form=root.querySelector('#episode-form');
+      form.onsubmit=async ev=>{
+        ev.preventDefault();
+        const button=root.querySelector('#generate-script-btn');
+        const fd=new FormData(form);
+        const title=String(fd.get('title')||'').trim();
+        const direction=String(fd.get('direction')||'').trim();
+        const selected=[...root.querySelector('[name="cast"]').selectedOptions].map(o=>o.value);
+        const cast=characters.filter(c=>selected.includes(c.id));
+        button.disabled=true;button.textContent='A IA está escrevendo...';
+        try {
+          const response=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+            series:{name:series.name,genre:series.genre,tone:series.tone,duration:series.duration,premise:series.premise},
+            episodeNumber:number,title,direction,continuity,
+            characters:cast.map(c=>({name:c.name,fruit:c.fruit,personality:c.personality,appearance:c.appearance,voice:c.voice,relations:c.relations}))
+          })});
+          const result=await response.json();
+          if(!response.ok)throw new Error(result.error||'Não foi possível gerar o roteiro.');
+          const script=result.script;
+          if(!script||!Array.isArray(script.scenes)||!script.scenes.length)throw new Error('A IA retornou um roteiro incompleto. Tente novamente.');
+          const ep={id:crypto.randomUUID(),seriesId,number,title:script.title||title,summary:script.summary||direction,direction,castIds:cast.map(c=>c.id),status:'draft',demo:false,scenes:script.scenes.map((scene,i)=>({title:scene.title||'Cena '+(i+1),description:scene.description||'',dialogue:scene.dialogue||''})),cliffhanger:script.cliffhanger||'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+          data.episodes.push(ep);closeModal();save();openEpisode(ep.id);toast('Roteiro criado pela IA. Revise antes de aprovar.');
+        } catch(error) {
+          button.disabled=false;button.textContent='✦ Gerar roteiro com IA';
+          toast(error.message||'Falha ao conectar com a IA.');
+          const note=root.querySelector('.modal-note');
+          if(note)note.textContent=error.message||'Falha ao conectar com a IA. Confira se a API está configurada na Vercel.';
+        }
       };
     });
   }
