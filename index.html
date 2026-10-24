@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#17131f" />
+  <meta name="description" content="Estúdio de séries de frutas com IA — roteiros, personagens e produção de episódios." />
+  <title>FrutaVerse AI — Estúdio de histórias</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#inicio" aria-label="FrutaVerse AI início"><span class="brand-mark">🍓</span><span>FrutaVerse <small>AI STUDIO</small></span></a>
+      <div class="side-label">ESTÚDIO</div>
+      <button class="nav-item active" data-page="inicio"><span>⌂</span> Visão geral</button>
+      <button class="nav-item" data-page="series"><span>▤</span> Minhas séries</button>
+      <button class="nav-item" data-page="personagens"><span>♟</span> Personagens</button>
+      <button class="nav-item" data-page="roteiros"><span>✎</span> Roteiros</button>
+      <div class="side-bottom"><div class="status-dot"></div><div><b>Estúdio pronto</b><small>Geração de vídeo ainda não conectada</small></div></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div><div class="eyebrow">SEU UNIVERSO CRIATIVO</div><h1 id="page-title">Visão geral</h1></div><div class="top-actions"><span class="local-pill"><span></span> Salvamento neste navegador</span><button class="btn btn-primary" id="new-series-top">＋ Nova série</button></div></header>
+      <section id="page-inicio" class="page active">
+        <div class="hero"><div class="hero-copy"><div class="hero-tag">✦ SEU PRÓXIMO UNIVERSO COMEÇA AQUI</div><h2>Histórias incríveis.<br><em>Personagens inesquecíveis.</em></h2><p>Crie séries de frutas em animação 3D cinematográfica. Escreva, revise e aprove cada roteiro antes de produzir qualquer vídeo.</p><button class="btn btn-light" id="hero-new">Começar uma série <span>→</span></button></div><div class="hero-art"><div class="orb orb-one"></div><div class="orb orb-two"></div><div class="fruit fruit-apple">🍎</div><div class="fruit fruit-pine">🍍</div><div class="fruit fruit-orange">🍊</div><div class="hero-caption">UM UNIVERSO DE POSSIBILIDADES</div></div></div>
+        <div class="stats-grid"><div class="stat-card"><span>Séries criadas</span><b id="stat-series">0</b><small>Seu universo de histórias</small></div><div class="stat-card"><span>Personagens</span><b id="stat-characters">0</b><small>Com identidade própria</small></div><div class="stat-card"><span>Roteiros aguardando</span><b id="stat-pending">0</b><small>Precisam da sua aprovação</small></div><div class="stat-card"><span>Episódios concluídos</span><b id="stat-done">0</b><small>Prontos no seu estúdio</small></div></div>
+        <div class="section-head"><div><div class="eyebrow">CONTINUE DE ONDE PAROU</div><h2>Suas séries</h2></div><button class="btn btn-ghost" data-goto="series">Ver todas →</button></div><div id="home-series" class="series-grid"></div>
+        <div class="notice"><span class="notice-icon">✦</span><div><b>Seu roteiro vem primeiro.</b><p>Este protótipo salva seus dados neste navegador. A geração real de texto por IA e de vídeos será ativada depois de conectar as chaves dos serviços. Nenhum vídeo falso será apresentado como resultado real.</p></div></div>
+      </section>
+      <section id="page-series" class="page"><div class="section-head"><div><div class="eyebrow">SEUS UNIVERSOS</div><h2>Todas as séries</h2></div><button class="btn btn-primary" id="new-series-list">＋ Criar série</button></div><div id="all-series" class="series-grid"></div></section>
+      <section id="page-personagens" class="page"><div class="section-head"><div><div class="eyebrow">ELENCO E CONTINUIDADE</div><h2>Personagens</h2></div><button class="btn btn-primary" id="new-character">＋ Novo personagem</button></div><p class="muted">Cadastre a aparência, personalidade, voz e relações para manter cada personagem consistente entre episódios.</p><div id="character-list" class="character-grid"></div></section>
+      <section id="page-roteiros" class="page"><div class="section-head"><div><div class="eyebrow">SALA DE ROTEIRO</div><h2>Roteiros e episódios</h2></div></div><div id="script-list" class="script-list"></div></section>
+      <footer>FRUTAVERSE AI <span>•</span> ESTÚDIO DE HISTÓRIAS <span class="footer-right">Feito para imaginar sem limites</span></footer>
+    </main>
+  </div>
+  <div id="modal-root" class="modal-root" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
